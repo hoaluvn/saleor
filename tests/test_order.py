@@ -1,14 +1,15 @@
-from prices import Price
+from prices import Amount, Price
 
 from saleor.order import models, OrderStatus
 from saleor.order.utils import add_variant_to_delivery_group
 
 
 def test_total_property():
-    order = models.Order(total_net=20, total_tax=5)
-    assert order.total.gross == 25
-    assert order.total.tax == 5
-    assert order.total.net == 20
+    order = models.Order(total_net=Amount(20, currency='USD'),
+                         total_tax=Amount(5, currency='USD'))
+    assert order.total.gross == Amount(25, currency='USD')
+    assert order.total.tax == Amount(5, currency='USD')
+    assert order.total.net == Amount(20, currency='USD')
 
 
 def test_total_property_empty_value():

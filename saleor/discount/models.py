@@ -265,8 +265,8 @@ class Sale(models.Model):
 
     def get_discount(self):
         if self.type == self.FIXED:
-            amount = Amount(self.value, currency=settings.DEFAULT_CURRENCY)
-            discount_price = Price(amount, amount)
+            discount_price = Amount(
+                self.value, currency=settings.DEFAULT_CURRENCY)
             return FixedDiscount(amount=discount_price, name=self.name)
         elif self.type == self.PERCENTAGE:
             return percentage_discount(value=self.value, name=self.name)
