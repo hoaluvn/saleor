@@ -201,7 +201,7 @@ class Voucher(models.Model):
                     msg % {'country': self.get_apply_to_display()})
             cart_total = checkout.get_subtotal()
             self.validate_limit(cart_total)
-            return self.get_fixed_discount_for(shipping_method.price)
+            return self.get_fixed_discount_for(shipping_method.get_total())
 
         elif self.type in (Voucher.PRODUCT_TYPE, Voucher.CATEGORY_TYPE):
             if self.type == Voucher.PRODUCT_TYPE:
@@ -217,16 +217,16 @@ class Voucher(models.Model):
                     'Voucher not applicable',
                     'This offer is only valid for selected items.')
                 raise NotApplicable(msg)
+            zero_amount = Amout(0, currency=settings.DEFAULT_CURRENCY)
+            zero = Price(zero_amount, zero_amount)
             if self.apply_to == Voucher.APPLY_TO_ALL_PRODUCTS:
                 discounts = (
                     self.get_fixed_discount_for(price) for price in prices)
                 discount_total = sum(
-                    (discount.amount for discount in discounts),
-                    Price(0, currency=settings.DEFAULT_CURRENCY))
+                    (discount.amount for discount in discounts), zero)
                 return FixedDiscount(discount_total, smart_text(self))
             else:
-                product_total = sum(
-                    prices, Price(0, currency=settings.DEFAULT_CURRENCY))
+                product_total = sum(prices, zero)
                 return self.get_fixed_discount_for(product_total)
 
         else:
@@ -265,8 +265,8 @@ class Sale(models.Model):
 
     def get_discount(self):
         if self.type == self.FIXED:
-            discount_price = Price(net=self.value,
-                                   currency=settings.DEFAULT_CURRENCY)
+            amount = Amount(self.value, currency=settings.DEFAULT_CURRENCY)
+            discount_price = Price(amount, amount)
             return FixedDiscount(amount=discount_price, name=self.name)
         elif self.type == self.PERCENTAGE:
             return percentage_discount(value=self.value, name=self.name)
